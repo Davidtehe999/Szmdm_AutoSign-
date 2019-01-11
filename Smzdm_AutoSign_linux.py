@@ -243,16 +243,19 @@ class Smzdm():
         else:
             sign_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             print(sign_time)
-            print("已经签到",)
+            print("已经签到")
+        self.browser.quit()
 
 
 
 
 if(__name__=="__main__"):
     smzdm = Smzdm("userName","passWord","http://www.smzdm.com")
-    try:
-        smzdm.login()
-        time.sleep(5)
-        smzdm.auto_sign()
-    except:
-        print(sys.exc_info())
+    while(1):
+        try:
+            smzdm.login()
+            time.sleep(5)
+            smzdm.auto_sign()
+            break
+        except:
+            print(sys.exc_info())
