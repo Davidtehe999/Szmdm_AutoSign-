@@ -6,22 +6,34 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 import sys
+import random
 import time
 
 
 class Smzdm():
     #初始化
-    def __init__(self,myUserName,myPassWord,url):
+    def __init__(self,myUserName,myPassWord,url,is_headless):
+        chromeOptions = Options()
         self.myUserName = myUserName
         self.myPassWord = myPassWord
         self.url = url
         self.browser = webdriver.Chrome(executable_path="./chromedriver")
         self.wait = WebDriverWait(self.browser, 20)
+        if is_headless:
+            chromeOptions.add_argument('--headless')
+            chromeOptions.add_argument("--start-maximized")
+            # 谷歌文档提到需要加上这个属性来规避bug
+            chromeOptions.add_argument('--disable-gpu')
+            # 设置屏幕器宽高
+            chromeOptions.add_argument("--window-size=1440,750")
+            #设置沙盒模式，在无gui的环境中非常重要！！！！
+            #chrome_options.add_argument("--no-sandbox");
 
 
     def login(self):
-        #self.browser.set_page_load_timeout(20)
+        self.browser.set_page_load_timeout(20)
         #self.browser.set_script_timeout(20)
         try:
             self.browser.get(self.url)
@@ -180,20 +192,21 @@ class Smzdm():
         track = []
         current = 0
         mid = distance * 4 / 5
-        t = 0.2
+        t = 0.5
         v = 0
         while current < distance:
             if current < mid:
-                a = 0.8
+                a = random.uniform(1, 0.9)
             else:
-                a = -3
+                a = random.uniform(-2,-2.9)
 
             v0 = v
             v = v0 + a * t
             move = v0 * t + 1 / 2 * a * t * t
             current += move
             print('目前距离:', current)
-            track.append(round(move))
+            #track.append(round(move))
+            track.append(move)
 
 
         return track
@@ -205,7 +218,7 @@ class Smzdm():
         '''
         tracks = self.get_track(distance + 20)
         tracks_back = []
-        back = self.get_track(23)
+        back = self.get_track(20.1)
         for i in back:
             tracks_back.append(i*(-1))
 
@@ -224,6 +237,12 @@ class Smzdm():
             ActionChains(self.browser).move_by_offset(xoffset=x, yoffset=0).perform()
         time.sleep(0.5)
 
+        #模拟人的拖动，前后犹豫xoffset -+3.5
+        ActionChains(self.browser).move_by_offset(xoffset=3.5, yoffset=0).perform()
+        time.sleep(0.7)
+        ActionChains(self.browser).move_by_offset(xoffset=-3.5, yoffset=0).perform()
+        time.sleep(0.3)
+
         ActionChains(self.browser).release().perform()
 
     def auto_sign(self):
@@ -236,10 +255,15 @@ class Smzdm():
         sign = self.browser.find_element_by_class_name("J_punch")
         signState = sign.text
         print(signState)
-        if signState == "签到领积分":
+        time.sleep(10)
+
+        if signState == "签到领积分":#登陆成功
             sign.click()
             sign_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             print("smzdm签到成功")
+        elif signState == "签到得积分":#登陆不成功
+            print("登陆失败，重新登陆")
+            print(aaaaa)#强制让程序出错，重新try
         else:
             sign_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             print(sign_time)
@@ -250,12 +274,16 @@ class Smzdm():
 
 
 if(__name__=="__main__"):
-    smzdm = Smzdm("userName","passWord","http://www.smzdm.com")
+    #实例的参数依次是用户名/密码/网址/是否无头（False为否，True为是)
     while(1):
         try:
+            smzdm = Smzdm("username", "password", "http://www.smzdm.com", False)
             smzdm.login()
             time.sleep(5)
             smzdm.auto_sign()
+            time.sleep(5)
             break
         except:
-            print(sys.exc_info())
+            print("错误：", sys.exc_info())
+            smzdm.browser.quit()
+            print("退出浏览器")
