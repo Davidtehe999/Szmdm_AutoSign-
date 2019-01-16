@@ -205,9 +205,16 @@ class Smzdm():
             move = v0 * t + 1 / 2 * a * t * t
             current += move
             print('目前距离:', current)
-            #track.append(round(move))
-            track.append(move)
-
+            track.append(round(move,1))
+            #track.append(move)
+            
+            
+        #上面的算法整个track[]之和会与distance有误差（因最后一次while判断），下面是排除误差
+        sumDistance = 0
+        for i in track:
+            sumDistance = sumDistance + i
+        errorDistance = round((distance - sumDistance),3)
+        track.append(errorDistance)
 
         return track
 
@@ -216,14 +223,19 @@ class Smzdm():
         拖动滑块到缺口处
         :return:
         '''
-        tracks = self.get_track(distance + 20)
+        #模拟人的拖动，第一阶段拖动滑块超过缺口exceedDistance
+        exceedDistance = round(random.uniform(1,20),2)
+        tracks = self.get_track(distance + exceedDistance)
+        
+        #第二阶段滑块往回拖
         tracks_back = []
-        back = self.get_track(20.1)
+        back = self.get_track(exceedDistance)
         for i in back:
             tracks_back.append(i*(-1))
 
         print("tracks:", tracks)
         print("tracks_back:", tracks_back)
+        
         # 滑块
         slider_button = self.wait.until(
             EC.element_to_be_clickable((By.XPATH, "//div[@class='gt_slider_knob gt_show']")))
@@ -238,9 +250,10 @@ class Smzdm():
         time.sleep(0.5)
 
         #模拟人的拖动，前后犹豫xoffset -+3.5
-        ActionChains(self.browser).move_by_offset(xoffset=3.5, yoffset=0).perform()
+        hesitateDistance = round(random.uniform(0,3.5),1)
+        ActionChains(self.browser).move_by_offset(xoffset=hesitateDistance, yoffset=0).perform()
         time.sleep(0.7)
-        ActionChains(self.browser).move_by_offset(xoffset=-3.5, yoffset=0).perform()
+        ActionChains(self.browser).move_by_offset(xoffset=hesitateDistance*(-1), yoffset=0).perform()
         time.sleep(0.3)
 
         ActionChains(self.browser).release().perform()
