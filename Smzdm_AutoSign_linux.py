@@ -12,6 +12,7 @@ import random
 import time
 import json
 
+
 class Smzdm():
     #初始化
     def __init__(self,myUserName,myPassWord,url,is_headless):
@@ -44,6 +45,7 @@ class Smzdm():
             print("执行停止")
             pass
 
+
         #尝试用cookies登陆
         try:
             # 加入cookies
@@ -54,10 +56,12 @@ class Smzdm():
 
 
 
-        #判断cookies是否过期,方法为检测登陆按钮，如果是签到得积分，则表示登陆失败
+        #判断cookies是否过期,方法为检测登陆用户名，如果是"Hi  你好"则登陆失败
         signClick = self.browser.find_element_by_class_name("old-entry")
+        loginState = self.browser.find_element_by_class_name("user-name").text
         #登陆失败则重新登陆，过geetest，并且保存最新的cookie
-        if signClick.text == "签到得积分":
+        #if signClick.text == "签到得积分":
+        if loginState == "Hi  你好":
             print("cookies登陆失败，开始过验证登陆")
             signClick.click()
             self.browser.implicitly_wait(5.7)
@@ -289,30 +293,31 @@ class Smzdm():
 
         #签到按钮
         sign = self.browser.find_element_by_class_name("J_punch")
-        signState = sign.text
+        signState = self.browser.find_element_by_class_name("user-name").text
         time.sleep(10)
 
-        if signState == "签到领积分":#登陆成功
-            # 保存最新的cookie
+        if signState != "Hi  你好":#登陆成功
 
+            if sign.text == "签到领奖":
 
-            sign.click()
-            sign_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            print("smzdm签到成功")
+                #print("点击签到领奖按钮")
+                sign.click()
+                #print("clicked")
+                time.sleep(5)
+                sign_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                print("smzdm签到成功")
+            else:
+                sign_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+                print(sign_time)
+                print("已经签到")
+
             self.get_cookie()
             print("过验证成功，保存最新的cookies")
-        elif signState == "签到得积分":#登陆不成功
+        elif signState == "Hi  你好":#登陆不成功
             print("登陆失败，重新登陆")
             raise RuntimeError("过geetest失败")#强制让程序出错，重新try
-        else:
-            sign_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
-
-            print(sign_time)
-            print("已经签到")
-            # 保存最新的cookie
-            self.get_cookie()
-            print("过验证成功，保存最新的cookies")
         self.browser.quit()
 
     #得到cookie
@@ -335,6 +340,11 @@ class Smzdm():
             self.browser.add_cookie(i)
         self.browser.refresh()
 
+'''
+#发送邮件提醒
+class mailToMe():
+    def __init__(self,mailAdd, mailPWD, sendTo):
+        '''
 
 
 
